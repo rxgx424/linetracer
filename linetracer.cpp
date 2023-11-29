@@ -62,7 +62,7 @@ int main(void)
 			c[i-1] = error;
 			minmaxLoc(c,&minVal,0,&minLoc);
 			if (p[4] > 2000) {
-				if (pt.x - centroids.at<double>(i, 0) < dst.cols / 4 && pt.x - centroids.at<double>(i, 0) > -(dst.cols / 4)) {  //-160~160
+				if (pt.x - centroids.at<double>(i, 0) < dst.cols / 8 && pt.x - centroids.at<double>(i, 0) > -(dst.cols / 8)) {  //-160~160
 					rectangle(dst, Rect(p[0], p[1], p[2], p[3]), Scalar(255, 0, 0), 2);
 					pt = Point(centroids.at<double>(i, 0), centroids.at<double>(i, 1));
 				}

@@ -35,7 +35,7 @@ int main(void)
 		src = src(Rect(0, 270, 640, 90)); //ROI
 		src2 = src.clone(); //ROI영상 src2에 복사
 		src2 = src + (80 - mean(src)[0]); //밝기 조정
-		GaussianBlur(src2, dst, Size(5,5), 5); //노이즈 제거
+		GaussianBlur(src2, src2, Size(5,5), 5); //노이즈 제거
 		threshold(src2, dst, 135, 255, THRESH_BINARY); //이진화
 		cnt = connectedComponentsWithStats(dst, labels, stats, centroids); //바운딩박스
 		cvtColor(dst, dst, COLOR_GRAY2BGR); //그레이->컬러

@@ -50,7 +50,7 @@ if (mx.kbhit()) //키보드 입력 체크
 		}
 		for (int i = 1;i < cnt;i++) {
 			int* p = stats.ptr<int>(i);
-			if (i == 1) c[1] = abs(sqrt(pow(pt.x - centroids.at<double>(i, 0), 2) + pow(pt.y - centroids.at<double>(i, 1), 2)));
+			if (i == 1) c[1] = abs(sqrt(pow(pt.x - centroids.at<double>(i, 0), 2) + pow(pt.y - centroids.at<double>(i, 1), 2))); //라인과 무게중심의 거리
 			c[0] = abs(sqrt(pow(pt.x - centroids.at<double>(i, 0), 2) + pow(pt.y - centroids.at<double>(i, 1), 2)));
 			if ((c[0] < dst.cols / 4 && c[0] <= c[1]) { //최소값구하기
 				c[1] = c[0];   //최소값 저장 (int)

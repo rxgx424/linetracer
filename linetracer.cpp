@@ -20,17 +20,17 @@ int main(void)
 	Mat labels, stats, centroids; //레이블링 변수
 	int cnt;
 	Dxl mx;  //다이나믹셀
-	int rvel = 0, lvel = 0, error;
+	int rvel = 0, lvel = 0, error = 0;
 	struct timeval start, end1; //시간 변수
 	double time1;
 	Point min(320, 45); //최소값 변수
 	signal(SIGINT, ctrlc_handler); //시그널 핸들러 지정
 	if (!mx.open()) { cout << "dynamixel open error" << endl; return -1; } //예외처리
 	while (true) {
+		gettimeofday(&start, NULL); //시작시간
 		source >> src; //영상 불러오기
 		if (src.empty()) { cerr << "frame empty!" << endl; break; }  //예외처리
 		writer1 << src; //영상출력
-		gettimeofday(&start, NULL); //시작시간
 		cvtColor(src, src, COLOR_BGR2GRAY); //컬러->그레이
 		src = src(Rect(0, 270, 640, 90)); //ROI
 		src2 = src.clone(); //ROI영상 src2에 복사
@@ -42,7 +42,7 @@ int main(void)
 		int c[2];  //c[0]=현재값, c[1]=최소값
 		int n = 0; //최소값의 cnt값
 		Point pt = min; //라인의 중심값
-if (mx.kbhit()) //키보드 입력 체크
+		if (mx.kbhit()) //키보드 입력 체크
 		{
 			char ch = mx.getch(); //키입력 받기
 			if (ch == 'q') break; //q이면 종료
@@ -66,8 +66,8 @@ if (mx.kbhit()) //키보드 입력 체크
 		lvel = 100 - 0.15 * error;
 		rvel = -(100 + 0.15 * error);
 		if (mode) mx.setVelocity(lvel, rvel); //다이나믹 셀 모드가 true면 작동
+		usleep(1000);
 		gettimeofday(&end1, NULL); //끝 시간
-		usleep(20 * 1000);
 		time1 = end1.tv_sec - start.tv_sec + (end1.tv_usec - start.tv_usec) / 1000000.0;
 		cout << "err:" << error << ", lvel:" << lvel << ", rvel:" << rvel << ", time:" << time1 << endl;
 		writer2 << src2; //ROI 영상출력

@@ -13,6 +13,18 @@ void ctrlc_handler(int) { ctrl_c_pressed = true; } //ctrl+c가 눌리면 true로
 
 int main(void)
 {
+	string wr1 = "appsrc ! videoconvert ! video/x-raw, format=BGRx ! nvvidconv ! nvv4l2h264enc insert-sps-pps=true ! h264parse ! rtph264pay pt=96 ! udpsink host=192.168.0.72 port=8451 sync=false";
+	VideoWriter writer1(wr1, 0, (double)30, Size(640, 360), true); //메인영상
+	if (!writer1.isOpened()) { cerr << "Writer open failed!" << endl; return -1; }
+
+	string wr2 = "appsrc ! videoconvert ! video/x-raw, format=BGRx ! nvvidconv ! nvv4l2h264enc insert-sps-pps=true ! h264parse ! rtph264pay pt=96 ! udpsink host=192.168.0.72 port=8452 sync=false";
+	VideoWriter writer2(wr2, 0, (double)30, Size(640, 90), false);  //ROI영상
+	if (!writer2.isOpened()) { cerr << "Writer open failed!" << endl; return -1; }
+
+	string wr3 = "appsrc ! videoconvert ! video/x-raw, format=BGRx ! nvvidconv ! nvv4l2h264enc insert-sps-pps=true ! h264parse ! rtph264pay pt=96 ! udpsink host=192.168.0.72 port=8453 sync=false";
+	VideoWriter writer3(wr3, 0, (double)30, Size(640, 90), true);  //라인검출 영상
+	if (!writer3.isOpened()) { cerr << "Writer open failed!" << endl; return -1; }
+	
 	VideoCapture source("6_lt_ccw_100rpm_out.mp4"); //출력영상
 	if (!source.isOpened()) { cerr << "failed!" << endl; return -1; } //예외처리
 
@@ -34,8 +46,8 @@ int main(void)
 		cvtColor(src, src, COLOR_BGR2GRAY); //컬러->그레이
 		src = src(Rect(0, 270, 640, 90)); //ROI
 		src2 = src.clone(); //ROI영상 src2에 복사
-		src2 = src + (80 - mean(src)[0]); //밝기 조정
 		GaussianBlur(src2, src2, Size(5,5), 5); //노이즈 제거
+		src2 = src + (80 - mean(src)[0]); //밝기 조정
 		threshold(src2, dst, 135, 255, THRESH_BINARY); //이진화
 		cnt = connectedComponentsWithStats(dst, labels, stats, centroids); //바운딩박스
 		cvtColor(dst, dst, COLOR_GRAY2BGR); //그레이->컬러
@@ -50,9 +62,9 @@ int main(void)
 		}
 		for (int i = 1;i < cnt;i++) {
 			int* p = stats.ptr<int>(i);
-			if (i == 1) c[1] = abs(sqrt(pow(pt.x - centroids.at<double>(i, 0), 2) + pow(pt.y - centroids.at<double>(i, 1), 2))); //라인과 무게중심의 거리
-			c[0] = abs(sqrt(pow(pt.x - centroids.at<double>(i, 0), 2) + pow(pt.y - centroids.at<double>(i, 1), 2)));
-			if ((c[0] < dst.cols / 4 && c[0] <= c[1]) { //최소값구하기
+			if (i == 1) c[1] = abs(sqrt(pow(pt.x - centroids.at<double>(i, 0), 2) + pow(pt.y - centroids.at<double>(i, 1), 2)));  //최소값 구하기 위한 첫번째 값(임의의 최소값)
+			c[0] = abs(sqrt(pow(pt.x - centroids.at<double>(i, 0), 2) + pow(pt.y - centroids.at<double>(i, 1), 2)));  //현재 무게중심과 라인의 무게중심 거리 구하기
+			if (c[0] <= c[1]) { //최소값구하기
 				c[1] = c[0];   //최소값 저장 (int)
 				min = Point(centroids.at<double>(i, 0), centroids.at<double>(i, 1));      //최소값의 무게중심 저장 (Point)
 				n = i; //최소값의 cnt값 저장
@@ -63,8 +75,8 @@ int main(void)
 		circle(dst, Point(min), 1, Scalar(255, 0, 0), 2);
 		if (ctrl_c_pressed) break; //Ctrl+c입력시 탈출
 		error = (dst.cols / 2) - min.x; //에러값(min.x=라인의 x값)
-		lvel = 100 - 0.15 * error;
-		rvel = -(100 + 0.15 * error);
+		lvel = 100 - 0.15 * error;  //왼쪽 모터 속도
+		rvel = -(100 + 0.15 * error);  //오른쪽 모터 속도
 		if (mode) mx.setVelocity(lvel, rvel); //다이나믹 셀 모드가 true면 작동
 		usleep(1000);
 		gettimeofday(&end1, NULL); //끝 시간
@@ -77,4 +89,3 @@ int main(void)
 	mx.close(); // 장치닫기
 	return 0;
 }
-
